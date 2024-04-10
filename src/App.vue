@@ -1,63 +1,90 @@
 <script setup>
-import { ref } from 'vue';
-const daysOfTheWeek = ref([`Понедельник`, `Вторник`, `Среда`, `Четверг`, `Пятница`]);
-const times = ref([`9:30`, `11:30`, `14:00`, `16:00`, `18:00`, `20:00`]);
+
+import { ref, watch } from 'vue';
+import LoginOverlay from './components/LoginOverlay.vue';
+import TimeTable from './components/TimeTable.vue';
+import GroupChoiceOverlay from './components/GroupChoiceOverlay.vue';
+
 const showOverlayCheck = ref(false);
 const showLoginCheck = ref(false);
+const showGroupsCheck = ref(false);
+const chosenGroup = ref({ "group_name": "Выбор группы" });
+const userInfo = ref([{ "surname": "", "name": "", "patronymic": "", "role": "" }]);
+const timeTable = ref([{}]);
+const currentWeek = ref("Четная неделя");
+
+const render = ref(false);
+watch(timeTable, () => {
+    console.log("timeTable: " + JSON.stringify(timeTable.value));
+    render.value = true;
+});
+
+
 function showLogin() {
-    changeOverlay();
+    showOverlay();
     showLoginCheck.value = true;
 }
-function changeOverlay() {
-    showOverlayCheck.value = !showOverlayCheck.value;
+function showGroups() {
+    showOverlay();
+    render.value = false;
+    showGroupsCheck.value = true;
+}
+function showOverlay() {
+    showOverlayCheck.value = true;
+}
+function closeAllOverlays() {
+    showOverlayCheck.value = false;
+    showGroupsCheck.value = false;
+    showLoginCheck.value = false;
+    render.value = true;
+}
+
+
+function swapWeek() {
+    currentWeek.value = currentWeek.value === 'Четная неделя' ? 'Нечетная неделя' : 'Четная неделя';
 }
 </script>
 
 <template>
 
     <body>
-        <div id="login-overlay" v-if="showLoginCheck && showOverlayCheck">
-            <label>Username : </label>
-            <input type="text" placeholder="Enter Username" name="username" required>
-            <label>Password : </label>
-            <input type="password" placeholder="Enter Password" name="password" required>
-            <button type="submit">Login</button>
+        <div id="login-overlay" class="overlay-window" v-if="showLoginCheck && showOverlayCheck">
+            <LoginOverlay @showOverlay="(resp) => {
+                showOverlayCheck = resp.showOverlay;
+                showLoginCheck = resp.showOverlay;
+                userInfo = resp.userInfo;
+            }" />
+
         </div>
-        <div id="overlay" @click="changeOverlay" v-if="showOverlayCheck">
+        <div id="group-overlay" class="overlay-window" v-if="showGroupsCheck && showOverlayCheck">
+            <GroupChoiceOverlay @showOverlay="(resp) => {
+                showOverlayCheck = resp.showOverlay;
+                showGroupsCheck = resp.showOverlay;
+                chosenGroup = resp.group;
+                timeTable = resp.timeTable;
+
+            }" />
+        </div>
+        <div id="overlay" @click="closeAllOverlays" v-if="showOverlayCheck">
         </div>
         <div id="top-body">
             <div class="top-body-part centered-elements-container">
-                <button>Выбор группы</button>
+                <button @click="showGroups">{{ chosenGroup.group_name }}</button>
             </div>
             <div class="top-body-part centered-elements-container">
                 <h1>Расписание</h1>
+                <button @click="swapWeek">{{ currentWeek }}</button>
             </div>
             <div class="top-body-part">
                 <button id='login-button' @click="showLogin">Вход</button>
                 <div class='user-data'>
-                    <p id='username'>shplex</p>
-                    <p id='name'>Орехов Д.С.</p>
-                    <p id='status'>Студент</p>
+                    <p id='name'>{{ userInfo[0].surname }} {{ userInfo[0].name }} {{ userInfo[0].patronymic }}</p>
+                    <p id='status'>{{ userInfo[0].role }}</p>
                 </div>
             </div>
         </div>
         <div id="main-body">
-            <table class="full-width-table" id="timetable">
-                <tr>
-                    <th> </th>
-                    <th v-for="day in daysOfTheWeek" v-bind:key="day">
-                        {{ day }}
-                    </th>
-
-                </tr>
-                <tr v-for="time in times" v-bind:key="time">
-                    <td>{{ time }}</td>
-                    <td v-for="day in daysOfTheWeek" v-bind:key="day">
-
-                    </td>
-                </tr>
-
-            </table>
+            <TimeTable :timeTableData="timeTable" v-if="render" />
 
         </div>
     </body>
@@ -66,7 +93,13 @@ function changeOverlay() {
 
 <style>
 body {
-    background-color: #9FBBCC;
+    background-color: #2D2A2E;
+    color: #FFFAE2;
+}
+
+label,
+.errmessage {
+    color: rgba(16, 37, 49, 0.5);
 }
 
 table,
@@ -76,6 +109,7 @@ td {
     border-collapse: collapse;
 }
 
+
 #overlay {
     position: absolute;
     top: 0px;
@@ -84,7 +118,8 @@ td {
     right: 0px;
     background-color: rgba(16, 37, 49, 0.5);
 }
-#login-overlay {
+
+.overlay-window {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -95,7 +130,8 @@ td {
     z-index: 100;
     padding: 25px;
 }
-#login-overlay input {
+
+.overlay-window input {
     width: 100%;
     margin: 8px 0;
     padding: 12px 20px;
@@ -125,6 +161,7 @@ td {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
 }
 
 #login-button {
@@ -132,7 +169,6 @@ td {
 }
 
 #main-body {
-    background-color: #7A9CC6;
     top: 20px;
     bottom: 0px;
     left: 50px;
@@ -143,4 +179,8 @@ td {
     width: 100%;
     table-layout: fixed;
 }
-</style>
+
+#timetable td {
+    height: 100px;
+}
+</style>./bridge.js

@@ -4,11 +4,13 @@ import { ref, defineProps } from 'vue';
 const times = ref([`9:30`, `11:30`, `14:00`, `16:00`, `18:00`, `20:00`]);
 const daysOfTheWeek = ref([`Понедельник`, `Вторник`, `Среда`, `Четверг`, `Пятница`]);
 const props = defineProps({
-    timeTableData: Array
+    timetableData: Array
 });
+console.log("@@@", props.ttData);
 
 const setClass = (timeIndex, dayIndex) => {
-    return props.timeTableData.find(
+
+    return props.timetableData.find(
         data => parseInt(data.class_num) === timeIndex + 1 && parseInt(data.day) === dayIndex + 1
     );
 };
@@ -34,7 +36,7 @@ const setClass = (timeIndex, dayIndex) => {
                     <span v-if="setClass(timeIndex, dayIndex)">
                         <p class="class-name">
                             {{ setClass(timeIndex, dayIndex).class_name }}
-                            {{ `( ${setClass(timeIndex, dayIndex).class_type})`}}
+                            {{ `(${setClass(timeIndex, dayIndex).class_type})` }}
                         </p>
                         <p class="teacher-data">
                             {{ setClass(timeIndex, dayIndex).teacher_surname }}
@@ -42,9 +44,9 @@ const setClass = (timeIndex, dayIndex) => {
                             {{ setClass(timeIndex, dayIndex).teacher_patronymic.charAt(0) + '.' }}
                         </p>
                         <p class="room-data">
-                            {{ setClass(timeIndex, dayIndex).room_num + ' ауд'}}
+                            {{ setClass(timeIndex, dayIndex).room_num + ' ауд.' }}
                         </p>
-                        <a class= "address-data" :href="setClass(timeIndex, dayIndex).address_URL">
+                        <a class="address-data" :href="setClass(timeIndex, dayIndex).address_URL">
                             {{ setClass(timeIndex, dayIndex).address }}
                         </a>
 

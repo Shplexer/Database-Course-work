@@ -1,23 +1,21 @@
 <script setup>
-
 import { ref, watch } from 'vue';
 import LoginOverlay from './components/LoginOverlay.vue';
 import TimeTable from './components/TimeTable.vue';
 import GroupChoiceOverlay from './components/GroupChoiceOverlay.vue';
+import EditOverlay from './components/EditOverlay.vue';
 
 const showOverlayCheck = ref(false);
 const showLoginCheck = ref(false);
 const showGroupsCheck = ref(false);
+const showEditCheck = ref(false);
 const chosenGroup = ref({ "group_name": "Выбор группы" });
 const userInfo = ref([{ "surname": "", "name": "", "patronymic": "", "role": "" }]);
-const timeTable = ref([{}]);
 const currentWeek = ref("Четная неделя");
+const timetableData = ref([]);
+const readyToLoadTT = ref(false);
+const weekID = ref(1);
 
-const render = ref(false);
-watch(timeTable, () => {
-    console.log("timeTable: " + JSON.stringify(timeTable.value));
-    render.value = true;
-});
 
 
 function showLogin() {
@@ -26,7 +24,6 @@ function showLogin() {
 }
 function showGroups() {
     showOverlay();
-    render.value = false;
     showGroupsCheck.value = true;
 }
 function showOverlay() {
@@ -36,18 +33,45 @@ function closeAllOverlays() {
     showOverlayCheck.value = false;
     showGroupsCheck.value = false;
     showLoginCheck.value = false;
-    render.value = true;
 }
 
-
+async function fetchTimetable(groupId) {
+    let response;
+    try {
+        if (groupId) {
+            response = await window.Bridge.doSomething({ req: 'timetable', group: groupId, week: weekID.value });
+        }
+    }
+    finally {
+        timetableData.value = response; // Set the resolved data to reactive property
+        readyToLoadTT.value = true;
+    }
+}
+watch([chosenGroup, weekID], async () => {
+    try {
+        readyToLoadTT.value = false;
+        if (chosenGroup.value.group_name !== "Выбор группы") {
+            await fetchTimetable(chosenGroup.value.id);
+        }
+    }
+    finally {
+        console.log("changed2", timetableData.value);
+    }
+});
 function swapWeek() {
     currentWeek.value = currentWeek.value === 'Четная неделя' ? 'Нечетная неделя' : 'Четная неделя';
+    weekID.value = weekID.value === 1 ? 2 : 1;
 }
 </script>
 
 <template>
 
     <body>
+        <div id="edit-overlay" class="overlay-window" v-if="showEditCheck && showOverlayCheck">
+            <EditOverlay @showOverlay="(resp) => {
+
+            }" />
+        </div>
         <div id="login-overlay" class="overlay-window" v-if="showLoginCheck && showOverlayCheck">
             <LoginOverlay @showOverlay="(resp) => {
                 showOverlayCheck = resp.showOverlay;
@@ -61,8 +85,6 @@ function swapWeek() {
                 showOverlayCheck = resp.showOverlay;
                 showGroupsCheck = resp.showOverlay;
                 chosenGroup = resp.group;
-                timeTable = resp.timeTable;
-
             }" />
         </div>
         <div id="overlay" @click="closeAllOverlays" v-if="showOverlayCheck">
@@ -84,7 +106,7 @@ function swapWeek() {
             </div>
         </div>
         <div id="main-body">
-            <TimeTable :timeTableData="timeTable" v-if="render" />
+            <TimeTable :timetableData="timetableData" v-if="readyToLoadTT" />
 
         </div>
     </body>
@@ -183,4 +205,4 @@ td {
 #timetable td {
     height: 100px;
 }
-</style>./bridge.js
+</style>

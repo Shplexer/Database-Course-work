@@ -34,6 +34,7 @@ export async function getData(opts) {
     console.log(opts);
 
     let query;
+    let searchValues = [];
     console.log(opts.req);
     switch (opts.req) {
         case `class_times`:
@@ -43,7 +44,9 @@ export async function getData(opts) {
             query = `SELECT * FROM student_groups;`;
             break;
         case `login`:
-            query = `SELECT * FROM login_info where login = '${opts.username}' and password = '${opts.password}';`;
+            query = `SELECT * FROM login_info where login = ? and password = ?;`;
+            searchValues = [opts.username, opts.password];
+
             break;
         case `user`:
             query = `
@@ -57,7 +60,8 @@ export async function getData(opts) {
                         roles on users.role = roles.id
                     INNER JOIN
                         departments on users.department_id = departments.id
-                WHERE users.login_info_id = ${opts.login_id};`;
+                WHERE users.login_info_id = ?;`;
+            searchValues = [opts.login_id];
             break;
         case `timetable`:
             query = `
@@ -88,14 +92,15 @@ export async function getData(opts) {
                         INNER JOIN
                     addresses ON classes.address_id = addresses.id
                 WHERE
-                    group_id = ${opts.group};`
+                    group_id = ? AND week_type_id = ?;`
+            searchValues = [opts.group, opts.week];
             break;
         default:
             console.log(`Invalid type: ${opts.req}`);
             return;
     }
     return new Promise((resolve, reject) => {
-        connection.query(query, function (error, results, fields) {
+        connection.query(query, searchValues, function (error, results, fields) {
             if (error) {
                 reject(error);
             } else {

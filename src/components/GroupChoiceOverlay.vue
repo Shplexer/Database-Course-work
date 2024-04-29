@@ -8,17 +8,12 @@ const emit = defineEmits(['showOverlay']);
 
 async function groupIsChosen(group){
     showOverlayCheck.value = false;
-    group.group_name += " группа"
-    const timetable = await fetchTimetable(group.id);
-    console.log(timetable);
-    emit('showOverlay', {"showOverlay": showOverlayCheck.value, "group": group, "timeTable": timetable});
+    
+    emit('showOverlay', {"showOverlay": showOverlayCheck.value, "group": group});
 }
 
-async function fetchTimetable(groupId) {
-  const response = await window.Bridge.doSomething({ req: 'timetable', group: groupId });
-  return response;
-}
 const groups = ref([]);
+
 onMounted(async () => {
       const allGroups = await Promise.resolve(window.Bridge.doSomething({"req":"groups"}));
       groups.value = allGroups;

@@ -4,7 +4,7 @@ import { app, protocol, BrowserWindow, ipcMain, net } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 import path from 'path'
-import {getData, closeConnection} from '../src/db.js'
+import { getData, closeConnection } from '../src/db.js'
 
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -89,7 +89,7 @@ if (isDevelopment) {
     }
 }
 
-ipcMain.handle('getInfo',  async (event, opts) => {
+ipcMain.handle('getInfo', async (event, opts) => {
     let data = await getData(opts);
 
     return data;

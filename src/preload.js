@@ -1,13 +1,10 @@
 
-const {contextBridge, ipcRenderer} = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 //ИСПОЛЬЗОВАТЬ THEN!!!!!!!!!!!!!!!!!!!!!!!
 contextBridge.exposeInMainWorld('Bridge', {
     doSomething: async (opts) => {
-      console.log(opts);
-      const data = await ipcRenderer.invoke('getInfo', opts);
-      return data;
-    },
-    changeWeek: ()=> {
-        ipcRenderer.send('changeWeek');
+        console.log(opts);
+        const data = await ipcRenderer.invoke('getInfo', opts);
+        return data;
     }
-  })
+})

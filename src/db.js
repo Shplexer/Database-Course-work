@@ -50,10 +50,12 @@ export async function getData(opts) {
             break;
         case `user`:
             query = `
-                SELECT users.surname,
+                SELECT users.id, 
+                    users.surname,
                     users.name,
                     users.patronymic,
                     roles.name AS role,
+                    roles.id AS role_id,
                     departments.id AS department_id
                 FROM users
                     INNER JOIN
@@ -71,6 +73,7 @@ export async function getData(opts) {
                     class_types.class_type AS class_type,
                     class_times.id AS class_num,
                     days_of_the_week.id AS day,
+                    users.id AS teacher_id,
                     users.surname AS teacher_surname,
                     users.name AS teacher_name,
                     users.patronymic AS teacher_patronymic,

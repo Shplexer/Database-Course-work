@@ -3,17 +3,22 @@ import { ref, watch } from 'vue';
 import LoginOverlay from './components/LoginOverlay.vue';
 import TimeTable from './components/TimeTable.vue';
 import GroupChoiceOverlay from './components/GroupChoiceOverlay.vue';
+import EditOverlay from './components/EditOverlay.vue';
 
 const showOverlayCheck = ref(false);
 const showLoginCheck = ref(false);
 const showGroupsCheck = ref(false);
-const chosenGroup = ref({ "group_name": "Выбор группы" });
-const userInfo = ref([{ "surname": "", "name": "", "patronymic": "", "role": "" }]);
-const currentWeek = ref("Четная неделя");
-const timetableData = ref([]);
+const showEditCheck = ref(false);
 const readyToLoadTT = ref(false);
+
+const chosenGroup = ref({ "group_name": "Выбор группы" });
+const userInfo = ref([{ "surname": "", "name": "", "patronymic": "", "role": "Гость" }]);
+
+const currentWeek = ref("Четная неделя");
 const weekID = ref(1);
-const userRole = ref('Гость');
+
+const timetableData = ref([]);
+const dataToEdit = ref({});
 
 
 
@@ -32,6 +37,7 @@ function closeAllOverlays() {
     showOverlayCheck.value = false;
     showGroupsCheck.value = false;
     showLoginCheck.value = false;
+    showEditCheck.value = false;
 }
 
 async function fetchTimetable(groupId) {
@@ -67,13 +73,14 @@ function swapWeek() {
 <template>
 
     <body>
-
+        <div id = "edit-overlay" class="overlay-window" v-if="showEditCheck && showOverlayCheck">
+            <EditOverlay :dataToEdit="dataToEdit" />
+        </div>
         <div id="login-overlay" class="overlay-window" v-if="showLoginCheck && showOverlayCheck">
             <LoginOverlay @showOverlay="(resp) => {
                 showOverlayCheck = resp.showOverlay;
                 showLoginCheck = resp.showOverlay;
                 userInfo = resp.userInfo;
-                userRole = resp.userInfo[0].role;
             }" />
 
         </div>
@@ -98,12 +105,16 @@ function swapWeek() {
                 <button id='login-button' @click="showLogin">Вход</button>
                 <div class='user-data'>
                     <p id='name'>{{ userInfo[0].surname }} {{ userInfo[0].name }} {{ userInfo[0].patronymic }}</p>
-                    <p id='role'>{{ userRole }}</p>
+                    <p id='role'>{{ userInfo[0].role }}</p>
                 </div>
             </div>
         </div>
         <div id="main-body">
-            <TimeTable :timetableData="timetableData" :currentUser="userInfo[0]" v-if="readyToLoadTT" />
+            <TimeTable :timetableData="timetableData" :currentUser="userInfo[0]" v-if="readyToLoadTT" @showOverlay ="(resp) => {
+                dataToEdit = resp.dataToEdit;
+                showEditCheck = true;
+                showOverlayCheck = true;
+            }"/>
 
         </div>
     </body>
@@ -114,6 +125,9 @@ function swapWeek() {
 body {
     background-color: #2D2A2E;
     color: #FFFAE2;
+}
+#edit-overlay h1, #edit-overlay p{
+    color: rgb(16, 37, 49);
 }
 
 label{

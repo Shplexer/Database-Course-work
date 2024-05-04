@@ -1,17 +1,35 @@
 <script setup>
-import { ref, defineProps } from 'vue';
-import EditOverlay from './EditOverlay.vue';
+import { ref, defineProps, defineEmits, onMounted } from 'vue';
 //Поменять получением из бд (?)
-const times = ref([`9:30`, `11:30`, `14:00`, `16:00`, `18:00`, `20:00`]);
-
+const times = ref([
+    {"id":1,"class_start":"9:30","class_end":"11:10"},
+    {"id":2,"class_start":"11:30","class_end":"13:10"},
+    {"id":3,"class_start":"14:00","class_end":"15:40"},
+    {"id":4,"class_start":"16:00","class_end":"17:40"},
+    {"id":5,"class_start":"18:00","class_end":"19:40"},
+    {"id":6,"class_start":"20:00","class_end":"21:30"}
+]);
 const daysOfTheWeek = ref([`Понедельник`, `Вторник`, `Среда`, `Четверг`, `Пятница`]);
-const showEditCheck = ref(false);
+const dataToEdit = ref({});
+const emit = defineEmits(['showOverlay'])
 
 const props = defineProps({
     timetableData: Array,
     currentUser: Object
 });
 
+const isDataLoaded = ref(false);
+
+onMounted(async () => {
+    try {
+        const fetchedTimes = await window.Bridge.doSomething({ req: 'class_times' });
+        times.value = fetchedTimes;
+    } catch (error) {
+        console.error('Failed to load times:', error);
+    } finally {
+        isDataLoaded.value = true; // Set this to true once data is loaded or if there's an error
+    }
+});
 
 console.log("@@@", props.timetableData);
 console.log("@@@@", props.currentUser);
@@ -23,11 +41,19 @@ const setClass = (timeIndex, dayIndex) => {
 };
 
 const logParagraphs = (timeIndex, dayIndex) => {
-    const classInfo = setClass(timeIndex, dayIndex);
-    console.log('logParagraphs called', classInfo);
     // TODO: Вывод оверлея редактирования, с передачей ему classInfo
     // если classInfo не пустой, в оверлей редактирования передается название редактирования
     // иначе, передается название добавления
+    const classInfo = setClass(timeIndex, dayIndex);
+    if(classInfo) {
+        console.log('edit called', classInfo);
+        dataToEdit.value = classInfo;
+    }
+    else {
+        console.log('add called');
+        dataToEdit.value = {};
+    }
+    emit('showOverlay', { dataToEdit: dataToEdit });
 };
 
 function canBeEditable(timeIndex, dayIndex) {
@@ -52,12 +78,7 @@ function canBeEditable(timeIndex, dayIndex) {
 
 </script>
 <template>
-    <div id="edit-overlay" class="overlay-window" v-if="showEditCheck && showOverlayCheck">
-        <EditOverlay @showOverlay="(resp) => {                                      
-        }" />
-
-    </div>
-    <table class="full-width-table" id="timetable">
+    <table class="full-width-table" id="timetable" v-if="isDataLoaded">
         <!-- Header row with days of the week -->
         <thead>
             <tr>
@@ -67,9 +88,9 @@ function canBeEditable(timeIndex, dayIndex) {
         </thead>
         <tbody>
             <!-- Rows for each time slot -->
-            <tr v-for="(time, timeIndex) in times" :key="time">
+            <tr v-for="(time, timeIndex) in times" :key="time.id">
                 <!-- First column with time -->
-                <td>{{ time }}</td>
+                <td>{{ `${time.class_start} - ${time.class_end}` }}</td>
                 <!-- Data cells -->
                 <td v-for="(day, dayIndex) in daysOfTheWeek" :key="day"
                     :class="{ 'editing-class-cell': canBeEditable(timeIndex, dayIndex) }"

@@ -72,14 +72,18 @@ export async function getData(opts) {
                     class_types.name AS class_name,
                     class_types.class_type AS class_type,
                     class_times.id AS class_num,
+                    date_format(class_start, '%k:%i') as class_start,
+                    date_format(class_end, '%k:%i') as class_end,
                     days_of_the_week.id AS day,
+                    days_of_the_week.name AS day_name,
                     users.id AS teacher_id,
                     users.surname AS teacher_surname,
                     users.name AS teacher_name,
                     users.patronymic AS teacher_patronymic,
                     rooms.room_num AS room_num,
                     addresses.address AS address,
-                    addresses.link AS address_URL
+                    addresses.link AS address_URL,
+                    student_groups.group_name AS group_name
                     FROM
                     classes
                         INNER JOIN
@@ -94,6 +98,8 @@ export async function getData(opts) {
                     rooms ON classes.room_id = rooms.id
                         INNER JOIN
                     addresses ON classes.address_id = addresses.id
+                        INNER JOIN
+                    student_groups ON classes.group_id = student_groups.id
                 WHERE
                     group_id = ? AND week_type_id = ?;`
             searchValues = [opts.group, opts.week];

@@ -8,34 +8,41 @@ const showOverlayCheck = ref(true);
 const emit = defineEmits(['showOverlay'])
 
 async function validateLogin() {
-  const loginResponse = await window.Bridge.doSomething({ 
-    req: 'login', 
-    username: username.value, 
-    password: password.value 
-  });
+  let loginResponse;
+  try {
 
-  isHidden.value = loginResponse.length > 0;
-
-  if (isHidden.value) {
-    const userId = loginResponse[0].id;
-    const userInfoResponse = await window.Bridge.doSomething({ req: 'user', login_id: userId });
-
-    showOverlayCheck.value = false;
-    emit('showOverlay', { 
-      showOverlay: showOverlayCheck.value, 
-      userInfo: userInfoResponse 
+    loginResponse = await window.Bridge.GET({
+      req: 'login',
+      username: username.value,
+      password: password.value
     });
+  }
+  finally {
+
+
+    isHidden.value = loginResponse.length > 0;
+
+    if (isHidden.value) {
+      const userId = loginResponse[0].id;
+      const userInfoResponse = await window.Bridge.GET({ req: 'user', login_id: userId });
+
+      showOverlayCheck.value = false;
+      emit('showOverlay', {
+        showOverlay: showOverlayCheck.value,
+        userInfo: userInfoResponse
+      });
+    }
   }
 }
 </script>
 
 <template>
-    <p class="errmessage" :class="{ hidden: isHidden }">Ошибка! Неправильно введен логин или пароль</p>
-    <label>Имя пользователя : </label>
-    <input v-model="username" type="text" placeholder="Enter Username" name="username" required>
-    <label>Пароль : </label>
-    <input v-model="password" type="password" placeholder="Enter Password" name="password" required>
-    <button @click="validateLogin" type="submit">Вход</button>
+  <p class="errmessage" :class="{ hidden: isHidden }">Ошибка! Неправильно введен логин или пароль</p>
+  <label>Имя пользователя : </label>
+  <input v-model="username" type="text" placeholder="Enter Username" name="username" required>
+  <label>Пароль : </label>
+  <input v-model="password" type="password" placeholder="Enter Password" name="password" required>
+  <button @click="validateLogin" type="submit">Вход</button>
 </template>
 
 <style></style>

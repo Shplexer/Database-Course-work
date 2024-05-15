@@ -44,7 +44,7 @@ async function fetchTimetable(groupId) {
     let response;
     try {
         if (groupId) {
-            response = await window.Bridge.doSomething({ req: 'timetable', group: groupId, week: weekID.value });
+            response = await window.Bridge.GET({ req: 'timetable', group: groupId, week: weekID.value });
         }
     }
     finally {
@@ -74,7 +74,8 @@ function swapWeek() {
 
     <body>
         <div id = "edit-overlay" class="overlay-window" v-if="showEditCheck && showOverlayCheck">
-            <EditOverlay :dataToEdit="dataToEdit" />
+            <EditOverlay :dataToEdit="dataToEdit" @showOverlay="
+                closeAllOverlays();" />
         </div>
         <div id="login-overlay" class="overlay-window" v-if="showLoginCheck && showOverlayCheck">
             <LoginOverlay @showOverlay="(resp) => {

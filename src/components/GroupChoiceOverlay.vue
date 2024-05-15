@@ -3,21 +3,27 @@ import { ref, defineEmits, onMounted } from 'vue';
 
 const showOverlayCheck = ref(true);
 const emit = defineEmits(['showOverlay']);
-
+const renderBtns = ref(false);
 //const groups = ['423', '424', '425'];
 
-async function groupIsChosen(group){
+async function groupIsChosen(group) {
     showOverlayCheck.value = false;
-    
-    emit('showOverlay', {"showOverlay": showOverlayCheck.value, "group": group});
+
+    emit('showOverlay', { "showOverlay": showOverlayCheck.value, "group": group });
 }
 
 const groups = ref([]);
 
 onMounted(async () => {
-      const allGroups = await Promise.resolve(window.Bridge.doSomething({"req":"groups"}));
-      groups.value = allGroups;
-    });
+    try {
+        const allGroups = await window.Bridge.GET({ "req": "groups" });
+        groups.value = allGroups;
+    }
+    finally {
+        renderBtns.value = true;
+    }
+
+});
 </script>
 
 <template>

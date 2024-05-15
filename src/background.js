@@ -4,7 +4,7 @@ import { app, protocol, BrowserWindow, ipcMain, net } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 import path from 'path'
-import { getData, closeConnection } from '../src/db.js'
+import { getData, postData, closeConnection } from '../src/db.js'
 
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -39,6 +39,7 @@ async function createWindow() {
         // Load the index.html when not in development
         win.loadURL('app://./index.html')
     }
+    
 }
 
 // Quit when all windows are closed.
@@ -94,3 +95,7 @@ ipcMain.handle('getInfo', async (event, opts) => {
 
     return data;
 });
+
+ipcMain.handle('postInfo', async (event, opts) => {
+    await postData(opts);
+})

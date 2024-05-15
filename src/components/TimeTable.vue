@@ -22,7 +22,7 @@ const isDataLoaded = ref(false);
 
 onMounted(async () => {
     try {
-        const fetchedTimes = await window.Bridge.doSomething({ req: 'class_times' });
+        const fetchedTimes = await window.Bridge.GET({ req: 'class_times' });
         times.value = fetchedTimes;
     } catch (error) {
         console.error('Failed to load times:', error);
@@ -40,7 +40,7 @@ const setClass = (timeIndex, dayIndex) => {
     );
 };
 
-const logParagraphs = (timeIndex, dayIndex) => {
+const callEdit = (timeIndex, dayIndex) => {
     // TODO: Вывод оверлея редактирования, с передачей ему classInfo
     // если classInfo не пустой, в оверлей редактирования передается название редактирования
     // иначе, передается название добавления
@@ -94,7 +94,7 @@ function canBeEditable(timeIndex, dayIndex) {
                 <!-- Data cells -->
                 <td v-for="(day, dayIndex) in daysOfTheWeek" :key="day"
                     :class="{ 'editing-class-cell': canBeEditable(timeIndex, dayIndex) }"
-                    @click.capture="canBeEditable(timeIndex, dayIndex) && logParagraphs(timeIndex, dayIndex)">
+                    @click.capture="canBeEditable(timeIndex, dayIndex) && callEdit(timeIndex, dayIndex)">
                     <!-- Find the data item with matching time and day -->
                     <span v-if="setClass(timeIndex, dayIndex)">
                         <p @click.stop class="class-name">

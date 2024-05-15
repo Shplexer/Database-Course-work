@@ -1,4 +1,5 @@
 import mysql from 'mysql';
+import { openSync } from 'original-fs';
 
 var connection = mysql.createConnection({
     host: 'localhost',
@@ -23,22 +24,22 @@ export async function postData(opts) {
     let searchValues = [];
     console.log(opts.req);
     switch (opts.req) {
+        case `deleteClass`:
+        query = `DELETE FROM classes WHERE id = ?`;    
+        searchValues = [opts.id];
+        break;
         case `addClass`:
-            query = `SELECT * FROM users WHERE role = 2;`;
-            searchValues = [opts.group, opts.week];
-            break;
-        case `editClass`:
             query = `
-                UPDATE classes
-                SET class_name_id = ?,
-                    group_id = ?,
-                    time_id = ?,
-                    teacher_id = ?,
-                    room_id = ?,
-                    week_type_id = ?
-                WHERE
-                    id = ?;
-                    `
+                INSERT INTO classes (
+                    class_name_id,
+                    group_id, 
+                    time_id, 
+                    teacher_id, 
+                    room_id, 
+                    week_type_id,
+                    day_id
+                )
+                VALUES ('?', '?', '?', '?', '?', '?', '?');`;
             searchValues = [
                 opts.className,
                 opts.group,
@@ -46,8 +47,26 @@ export async function postData(opts) {
                 opts.teacher,
                 opts.room,
                 opts.week,
+                opts.day
+            ];
+            break;
+        case `editClass`:
+            query = `
+                UPDATE classes
+                SET class_name_id = ?,
+                    group_id = ?,
+                    teacher_id = ?,
+                    room_id = ?
+                WHERE
+                    id = ?;
+                    `
+            searchValues = [
+                opts.className,
+                opts.group,
+                opts.teacher,
+                opts.room,
                 opts.id
-            ]
+            ];
             break;
         default:
             console.log(`Invalid type: ${opts.req}`);
@@ -81,8 +100,9 @@ export async function getData(opts) {
                         AND day_id = ? 
                         AND week_type_id = ? 
                         AND class_name_id != ?
+                        AND group_id != ?
                     );`;
-                    searchValues = [opts.teacher, opts.time, opts.day, opts.week, opts.group];
+                    searchValues = [opts.teacher, opts.time, opts.day, opts.week, opts.className, opts.group];
                     break;
                 case `group`:
                     break;
@@ -93,8 +113,9 @@ export async function getData(opts) {
                         AND day_id = ? 
                         AND week_type_id = ? 
                         AND class_name_id != ?
+                        AND group_id != ?
                     );`;
-                    searchValues = [opts.room, opts.time, opts.day, opts.week, opts.group];
+                    searchValues = [opts.room, opts.time, opts.day, opts.week, opts.className, opts.group];
                     break;
             }
             break;

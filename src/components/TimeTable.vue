@@ -51,9 +51,10 @@ const callEdit = (timeIndex, dayIndex) => {
     }
     else {
         console.log('add called');
+        console.log('time: ', timeIndex, ' day: ', dayIndex);
         dataToEdit.value = {};
     }
-    emit('showOverlay', { dataToEdit: dataToEdit });
+    emit('showOverlay', { dataToEdit: dataToEdit, dataToEditTime: timeIndex + 1, dataToEditDay: dayIndex + 1 });
 };
 
 function canBeEditable(timeIndex, dayIndex) {

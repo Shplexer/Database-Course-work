@@ -39,9 +39,9 @@ async function validateLogin() {
 <template>
   <p class="errmessage" :class="{ hidden: isHidden }">Ошибка! Неправильно введен логин или пароль</p>
   <label>Имя пользователя : </label>
-  <input v-model="username" type="text" placeholder="Enter Username" name="username" required>
+  <input v-model="username" type="text" placeholder="" name="username" required>
   <label>Пароль : </label>
-  <input v-model="password" type="password" placeholder="Enter Password" name="password" required>
+  <input v-model="password" type="password" placeholder="" name="password" required>
   <button @click="validateLogin" type="submit">Вход</button>
 </template>
 

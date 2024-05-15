@@ -10,6 +10,7 @@ const showLoginCheck = ref(false);
 const showGroupsCheck = ref(false);
 const showEditCheck = ref(false);
 const readyToLoadTT = ref(false);
+const refresh = ref(0);
 
 const chosenGroup = ref({ "group_name": "Выбор группы" });
 const userInfo = ref([{ "surname": "", "name": "", "patronymic": "", "role": "Гость" }]);
@@ -19,6 +20,8 @@ const weekID = ref(1);
 
 const timetableData = ref([]);
 const dataToEdit = ref({});
+const dataToEditTime = ref(0);
+const dataToEditDay = ref(0);
 
 
 
@@ -53,7 +56,7 @@ async function fetchTimetable(groupId) {
         readyToLoadTT.value = true;
     }
 }
-watch([chosenGroup, weekID], async () => {
+watch([chosenGroup, weekID, refresh], async () => {
     try {
         readyToLoadTT.value = false;
         if (chosenGroup.value.group_name !== "Выбор группы") {
@@ -74,8 +77,16 @@ function swapWeek() {
 
     <body>
         <div id = "edit-overlay" class="overlay-window" v-if="showEditCheck && showOverlayCheck">
-            <EditOverlay :dataToEdit="dataToEdit" @showOverlay="
-                closeAllOverlays();" />
+            <EditOverlay :dataToEdit="dataToEdit"
+             :dataToEditTime ="dataToEditTime" 
+             :dataToEditDay ="dataToEditDay" 
+             :dataToEditWeek = "weekID" 
+             :dataToEditGroup = "chosenGroup.id" 
+             :userRole = "userInfo[0].role" 
+             @showOverlay="
+                closeAllOverlays();
+                refresh++;
+                " />
         </div>
         <div id="login-overlay" class="overlay-window" v-if="showLoginCheck && showOverlayCheck">
             <LoginOverlay @showOverlay="(resp) => {
@@ -113,6 +124,8 @@ function swapWeek() {
         <div id="main-body">
             <TimeTable :timetableData="timetableData" :currentUser="userInfo[0]" v-if="readyToLoadTT" @showOverlay ="(resp) => {
                 dataToEdit = resp.dataToEdit;
+                dataToEditTime = resp.dataToEditTime;
+                dataToEditDay = resp.dataToEditDay;
                 showEditCheck = true;
                 showOverlayCheck = true;
             }"/>

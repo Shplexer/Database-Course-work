@@ -1,24 +1,31 @@
 <script setup>
-import { ref, defineProps, onMounted } from 'vue';
+import { ref, defineProps, onMounted, defineEmits } from 'vue';
 
 const props = defineProps({
-    dataToEdit: Object
+    dataToEdit: Object,
+    dataToEditDay: Number,
+    dataToEditTime: Number,
+    dataToEditWeek: Number,
+    dataToEditGroup: Number,
+    userRole: String
 });
 
-console.log("===", props.dataToEdit);
+const emit = defineEmits(['showOverlay']);
 
-const selectedTeacher = ref(props.dataToEdit.teacher_id);
-const selectedGroup = ref(props.dataToEdit.group_id);
-const selectedSubject = ref(props.dataToEdit.class_type_id);
-const selectedRoomNum = ref(props.dataToEdit.room_id);
+console.log("===", props.dataToEdit.value, props.dataToEditDay, props.dataToEditTime, props.dataToEditWeek, props.dataToEditGroup);
+
+const isHidden = ref(true);
+const errMessage = ref("");
+const selectedTeacher = ref(props.dataToEdit.value.teacher_id);
+const selectedSubject = ref(props.dataToEdit.value.class_type_id);
+const selectedRoomNum = ref(props.dataToEdit.value.room_id);
 const renderEditDialogue = ref(false);
 const procedureName = ref("");
 const AllTeachers = ref([{}]);
-const AllGroups = ref([{}]);
 const AllSubjects = ref([{}]);
 const AllRooms = ref([{}]);
 
-if(Object.keys(props.dataToEdit).length != 0){
+if(Object.keys(props.dataToEdit.value).length != 0){
     procedureName.value = "Редактирование";
 }
 else{
@@ -27,77 +34,94 @@ else{
 onMounted(async () => {
     try {
         AllTeachers.value = await window.Bridge.GET({ req: 'teachers' });
-        AllGroups.value = await window.Bridge.GET({ req: 'groups' });
         AllSubjects.value = await window.Bridge.GET({ req: 'subjects' });
         AllRooms.value = await window.Bridge.GET({ req: 'rooms' });
     }
     finally {
         renderEditDialogue.value = true;
-        console.log("AllTeachers", AllTeachers.value);
-        console.log("AllGroups", AllGroups.value);
-        console.log("AllSubjects", AllSubjects.value);
-        console.log("AllRooms", AllRooms.value);
     }
 })
 async function logSelectedOptions() {
     if(await validateEdits()){
-        if(Object.keys(props.dataToEdit).length != 0){
-            console.log("Editing class:", props.dataToEdit.id)
-            console.log("Selected teacher:", selectedTeacher.value);
-            console.log("Selected group:", selectedGroup.value);
-            console.log("Selected class name:", selectedSubject.value);
-            console.log("Selected room number:", selectedRoomNum.value);
+        if(Object.keys(props.dataToEdit.value).length != 0){
             await window.Bridge.POST({
                 req: 'editClass',
                 className: selectedSubject.value,
-                group: selectedGroup.value,
-                time: props.dataToEdit.class_num,
+                group: props.dataToEditGroup,
                 room: selectedRoomNum.value,                
                 teacher: selectedTeacher.value,
-                week: props.dataToEdit.week_type_id,
-                id: props.dataToEdit.id
+                id: props.dataToEdit.value.id
             });
         }
         else{
             console.log("adding class:");
+            await window.Bridge.POST({
+                req: 'addClass',
+                className: selectedSubject.value,
+                group: props.dataToEditGroup,
+                room: selectedRoomNum.value,                
+                teacher: selectedTeacher.value,
+                week: props.dataToEditWeek,
+                day: props.dataToEditDay,
+                time: props.dataToEditTime
+            });
         }
+        emit('showOverlay');
     }
     else{
         console.log("Invalid edits. Please check your input and try again.")
     }
 }
+async function deleteClass(){
+    if(Object.keys(props.dataToEdit.value).length != 0){
+        await window.Bridge.POST({
+            req: 'deleteClass',
+            id: props.dataToEdit.value.id
+        })
+    }
+    emit('showOverlay');
+}
 async function validateEdits() {
     try {
-        //Проверки:
-        // У преподавателя нет другой пары в это время и этот день 
-        // У группы нет другой пары в это время и этот день
-        // В этой аудитории нет другой пары в это время и этот день
         const otherTeacherClasses = await window.Bridge.GET({
             req: 'validate',
             validation: 'teacher',
             teacher: selectedTeacher.value,
-            day: props.dataToEdit.day,
-            time: props.dataToEdit.class_num,
-            week: props.dataToEdit.week_type_id
+            day: props.dataToEditDay,
+            time: props.dataToEditTime,
+            week: props.dataToEditWeek,
+            className: selectedSubject.value,
+            group: props.dataToEditGroup
         });
 
         const otherRoomClasses = await window.Bridge.GET({
             req: 'validate',
             validation: 'room',
             room: selectedRoomNum.value,
-            day: props.dataToEdit.day,
-            time: props.dataToEdit.class_num,
-            week: props.dataToEdit.week_type_id
+            day: props.dataToEditDay,
+            time: props.dataToEditTime,
+            week: props.dataToEditWeek,
+            className: selectedSubject.value,
+            group: props.dataToEditGroup
         });
-
-        if ( otherTeacherClasses[0]['COUNT(*)'] != 0 || otherRoomClasses[0]['COUNT(*)'] != 0) {
-            return false;
+        if (otherRoomClasses[0]['COUNT(*)'] != 0 && otherTeacherClasses[0]['COUNT(*)'] != 0) {
+            errMessage.value = "Преподаватель и аудитория в это время уже заняты";
+            isHidden.value = false;
+        }
+        else if (otherTeacherClasses[0]['COUNT(*)'] != 0) {
+            errMessage.value = "Преподаватель уже имеет пару в это время и этот день";
+            isHidden.value = false;
+        }
+        else if (otherRoomClasses[0]['COUNT(*)'] != 0) {
+            errMessage.value = "В этой аудитории уже есть пара в это время и этот день";
+            isHidden.value = false;
         }
         else {
-            return true;
+            isHidden.value = true;
         }
+        return isHidden.value;
     } catch (error) {
-        console.error('validateEdits() encountered an unhandled exception: ', error);
+        console.error(' encountered an unhandled exception: ', error);
         throw error;
     }
 }
@@ -106,21 +130,15 @@ async function validateEdits() {
 <template>
     <div class="top-body-part centered-elements-container">
         <h1>{{procedureName}}</h1>
+        <p class="errmessage" :class="{ hidden: isHidden }">Ошибка! {{ errMessage }}</p>
 
     </div>
     <div v-if="renderEditDialogue" id="edit-options">
 
-        <p>Преподаватель:</p>
-        <select v-model="selectedTeacher" name="teacher">
+        <p v-if ="userRole == 'Администратор'">Преподаватель:</p>
+        <select v-if="userRole == 'Администратор'" v-model="selectedTeacher" name="teacher">
             <option v-for="teacher in AllTeachers" :key="teacher.id" :value="teacher.id">
                 {{ `${teacher.surname} ${teacher.name} ${teacher.patronymic}` }} 
-            </option>
-        </select>
-
-        <p>Группа:</p>
-        <select v-model="selectedGroup" name="group_name">
-            <option v-for="group in AllGroups" :key="group.id" :value="group.id">
-                {{ `${group.group_name}` }}
             </option>
         </select>
 
@@ -139,7 +157,7 @@ async function validateEdits() {
         </select>
     </div>
     <button @click="logSelectedOptions">Сохранить</button>
-    <button> Удалить </button>
+    <button @click="deleteClass"> Удалить </button>
 
 </template>
 

@@ -8,7 +8,7 @@ var connection = mysql.createConnection({
 });
 
 export async function openConnection() {
-    if(connection.state == 'disconnected'){
+    if(connection.state === 'disconnected'){
         return new Promise((resolve, reject) => {
             connection.connect(function (err) {
                 if (err) {

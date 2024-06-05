@@ -16,16 +16,20 @@ console.log("===", props.dataToEdit.value, props.dataToEditDay, props.dataToEdit
 
 const isHidden = ref(true);
 const errMessage = ref("");
-const selectedTeacher = ref(props.dataToEdit.value.teacher_id);
-const selectedSubject = ref(props.dataToEdit.value.class_type_id);
-const selectedRoomNum = ref(props.dataToEdit.value.room_id);
+//При билде приложения добавить .value к следующим трем пропам (напр props.dataToEdit.value.teacher_id )
+const selectedTeacher = ref(props.dataToEdit.teacher_id);
+const selectedSubject = ref(props.dataToEdit.class_type_id);
+const selectedRoomNum = ref(props.dataToEdit.room_id);
+
+
 const renderEditDialogue = ref(false);
 const procedureName = ref("");
 const AllTeachers = ref([{}]);
 const AllSubjects = ref([{}]);
 const AllRooms = ref([{}]);
 
-if(Object.keys(props.dataToEdit.value).length != 0){
+//При билде добавить .value (props.dataToEdit.value)
+if(Object.keys(props.dataToEdit).length != 0){
     procedureName.value = "Редактирование";
 }
 else{
@@ -43,7 +47,8 @@ onMounted(async () => {
 })
 async function logSelectedOptions() {
     if(await validateEdits()){
-        if(Object.keys(props.dataToEdit.value).length != 0){
+        //При билде добавить .value (props.dataToEdit.value)  
+        if(Object.keys(props.dataToEdit).length != 0){
             await window.Bridge.POST({
                 req: 'editClass',
                 className: selectedSubject.value,
@@ -69,14 +74,16 @@ async function logSelectedOptions() {
         emit('showOverlay');
     }
     else{
-        console.log("Invalid edits. Please check your input and try again.")
+        console.log("Ошибка");
     }
 }
 async function deleteClass(){
-    if(Object.keys(props.dataToEdit.value).length != 0){
+    //При билде добавить .value (props.dataToEdit.value)
+    if(Object.keys(props.dataToEdit).length != 0){
         await window.Bridge.POST({
             req: 'deleteClass',
-            id: props.dataToEdit.value.id
+            //Может быть добавить .value для билда (? не уверен -- проверить потом)
+            id: props.dataToEdit.id
         })
     }
     emit('showOverlay');

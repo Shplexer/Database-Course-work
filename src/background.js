@@ -4,7 +4,7 @@ import { app, protocol, BrowserWindow, ipcMain, net } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 import path from 'path'
-import { getData, postData, closeConnection } from '../src/db.js'
+import { getData, postData, closeConnection, openConnection } from '../src/db.js'
 
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -25,7 +25,8 @@ async function createWindow() {
             // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
             nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
             contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION
-        }
+        },
+        icon: path.join(__dirname, '../public/schedule.png'),
     })
     win.maximize();
     console.log(path.join(__dirname, '../src/preload.js'));
@@ -42,6 +43,7 @@ async function createWindow() {
     
 }
 
+
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
     // On macOS it is common for applications and their menu bar
@@ -55,7 +57,10 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow()
+        mainWindow.setTitle('New Window Title');
+    }
 })
 
 // This method will be called when Electron has finished
@@ -98,4 +103,8 @@ ipcMain.handle('getInfo', async (event, opts) => {
 
 ipcMain.handle('postInfo', async (event, opts) => {
     await postData(opts);
+})
+
+ipcMain.handle('openConnection',  (event, opts) => {
+    return openConnection();
 })

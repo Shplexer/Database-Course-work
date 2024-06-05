@@ -1,14 +1,16 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import LoginOverlay from './components/LoginOverlay.vue';
 import TimeTable from './components/TimeTable.vue';
 import GroupChoiceOverlay from './components/GroupChoiceOverlay.vue';
 import EditOverlay from './components/EditOverlay.vue';
 
+
 const showOverlayCheck = ref(false);
 const showLoginCheck = ref(false);
 const showGroupsCheck = ref(false);
 const showEditCheck = ref(false);
+const showConnectionCheck = ref(false);
 const readyToLoadTT = ref(false);
 const refresh = ref(0);
 
@@ -23,8 +25,21 @@ const dataToEdit = ref({});
 const dataToEditTime = ref(0);
 const dataToEditDay = ref(0);
 
-
-
+onMounted(async () => {
+ await checkConnection();
+ document.title = 'Schedule';
+});
+async function checkConnection() {
+    let dbCon;
+    try {
+        dbCon = await window.Bridge.openDBConnection();
+        
+    }
+    finally {
+        console.log(dbCon);
+        showConnectionCheck.value = !dbCon;
+    }
+}
 function showLogin() {
     showOverlay();
     showLoginCheck.value = true;
@@ -33,6 +48,7 @@ function showGroups() {
     showOverlay();
     showGroupsCheck.value = true;
 }
+
 function showOverlay() {
     showOverlayCheck.value = true;
 }
@@ -76,6 +92,14 @@ function swapWeek() {
 <template>
 
     <body>
+        <div id = "connection-overlay" class="overlay-window centered-elements-container" v-if="showConnectionCheck">
+            <h1>Не удалось подключиться к базе данных</h1>
+            <button @click="checkConnection">Попробовать снова</button>
+        </div>
+        <div id = "unclickable-overlay" v-if="showConnectionCheck"> 
+
+        </div>
+
         <div id = "edit-overlay" class="overlay-window" v-if="showEditCheck && showOverlayCheck">
             <EditOverlay :dataToEdit="dataToEdit"
              :dataToEditTime ="dataToEditTime" 
@@ -136,6 +160,13 @@ function swapWeek() {
 
 
 <style>
+
+#connection-overlay h1 {
+    color: #2D2A2E;
+}
+button{
+    margin: 5px;
+}
 body {
     background-color: #2D2A2E;
     color: #FFFAE2;
@@ -158,6 +189,14 @@ td {
     border-collapse: collapse;
 }
 
+#unclickable-overlay {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    background-color: rgba(16, 37, 49, 0.5);
+}
 
 #overlay {
     position: absolute;

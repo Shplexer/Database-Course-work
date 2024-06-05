@@ -110,9 +110,9 @@ function canBeEditable(timeIndex, dayIndex) {
                         <p @click.stop class="room-data">
                             {{ setClass(timeIndex, dayIndex).room_num + ' ауд.' }}
                         </p>
-                        <a class="address-data" :href="setClass(timeIndex, dayIndex).address_URL">
+                        <p class="address-data">
                             {{ setClass(timeIndex, dayIndex).address }}
-                        </a>
+                        </p>
 
                     </span>
                 </td>

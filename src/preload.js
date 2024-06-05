@@ -9,5 +9,8 @@ contextBridge.exposeInMainWorld('Bridge', {
     POST: async (opts) =>{
         console.log("POST:", opts)
         await ipcRenderer.invoke('postInfo', opts)
+    },
+    openDBConnection: () => {
+        return ipcRenderer.invoke('openConnection')
     }
 })

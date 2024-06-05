@@ -27,9 +27,12 @@ onMounted(async () => {
 </script>
 
 <template>
+    <h1 style = "color: #2D2A2E;">Выберите группу</h1>
+    <div class = "centered-elements-container" style="flex-direction: row;" v-if="renderBtns">
     <button v-for="group in groups" v-bind:key="group.id" @click="groupIsChosen(group)">
         {{ group.group_name }}
     </button>
+    </div>
 </template>
 
 <style></style>

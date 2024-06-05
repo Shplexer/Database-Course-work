@@ -1,5 +1,4 @@
 import mysql from 'mysql';
-import { openSync } from 'original-fs';
 
 var connection = mysql.createConnection({
     host: 'localhost',
@@ -8,15 +7,25 @@ var connection = mysql.createConnection({
     database: 'schedule'
 });
 
-
-connection.connect(function (err) {
-    // in case of error
-    console.log("Connected to DB");
-    if (err) {
-        console.log(err.code);
-        console.log(err.fatal);
+export async function openConnection() {
+    if(connection.state == 'disconnected'){
+        return new Promise((resolve, reject) => {
+            connection.connect(function (err) {
+                if (err) {
+                    console.log("err:", err.code, err.fatal);
+                    resolve(false);
+                } else {
+                    console.log("Connected to DB");
+                    resolve(true);
+                }
+            });
+        });
     }
-});
+    else{
+        return true;
+    }
+}
+
 
 export async function postData(opts) {
     console.log(opts);
